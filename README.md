@@ -2,6 +2,6 @@
 
 Бут Анна
 
-ПЗ1: Правила оформлення програмного коду C#
+Правила оформлення програмного коду C# за стандартами Microsoft C# Coding Conventions 
 
-ПЗ2: Методи рефакторингу коду програмного забезпечення
+Методи рефакторингу коду програмного забезпечення Decompose Conditional, Hide Method, Consolidate Conditional Expression
