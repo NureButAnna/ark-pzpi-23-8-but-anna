@@ -5,3 +5,7 @@
 Правила оформлення програмного коду C# за стандартами Microsoft C# Coding Conventions 
 
 Методи рефакторингу коду програмного забезпечення за стандартами Microsoft C# Coding Conventions (Decompose Conditional, Hide Method, Consolidate Conditional Expression) 
+
+Програмна система для автоматизації процесу сортування сміття
+
+---
