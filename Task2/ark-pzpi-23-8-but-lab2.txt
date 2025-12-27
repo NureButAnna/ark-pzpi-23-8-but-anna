@@ -1,0 +1,713 @@
+Міністерство освіти і науки України
+Харківський національний університет радіоелектроніки
+
+Катедра програмної інженерії
+
+
+
+ЗВІТ
+до лабораторної роботи № 2
+з дисципліни «Аналіз та рефакторинґ коду»
+на тему: «Розробка бази даних для серверної частини програмної системи та прикладного програмного інтерфейсу (API)»
+
+
+
+
+     Виконала
+     ст. гр. ПЗПІ-23-8
+     Бут А. Ю.
+
+     Перевірив
+     асистент катедри ПІ
+Дашенков Д. С.               
+
+
+
+Харків 2025
+
+1 ЗАВДАННЯ
+
+     Ознайомитися з процесом розробки серверної частини програмної системи, включаючи проектування бази даних (БД), розробку API для взаємодії з клієнтами, та перевірку (тестування) їхньої взаємодії. Оволодіти методами проектування діаграм UML та ER, розробки БД, програмної реалізації API.
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+2 ОПИС ВИКОНАНОЇ РОБОТИ
+     2.1 Розробка будови програмної системи
+     
+     Серверна частина системи реалізована на основі фреймворку FastAPI та побудована за принципами RESTful API. Сервер відповідає за бізнес-логіку, обробку запитів клієнтів, інтеграцію з IoT-пристроями та взаємодію з базою даних.
+     Основні серверні функції:
+* автентифікація та авторизація користувачів з використанням JWT;
+* управління обліковими записами та ролями користувачів;
+* обробка даних від IoT-пристроїв;
+* управління контейнерами та місцями їх розташування;
+* планування та облік вивозу відходів;
+* обробка заявок на утилізацію та переробку;
+* взаємодія з організаціями та приватними компаніями;
+* формування сповіщень і повідомлень про переповнення контейнерів, час вивозу та нагадування про роздільний збір;
+* формування статистик, звітів, рейтингів користувачів та аналітики для муніципальних служб і компаній.
+     Сервер надає клієнтам стандартизований інтерфейс доступу до ресурсів системи через HTTP-запити з використанням методів GET, POST, PUT та DELETE.
+     Клієнтська частина системи представлена мобільним застосунком для побутових користувачів та вебзастосунком для муніципальних служб, приватних компаній і адміністратора.
+     Клієнти взаємодіють із сервером виключно через RESTful API, використовуючи захищене з’єднання HTTPS.
+     Для зберігання інформації обрано реляційну модель баз даних та PostgreSQL для управління. 
+
+
+     2.2 UML діаграма прецедентів для серверної частини системи
+     UML-діаграми прецедентів для мобільної та веб-частини системи були розділені на два окремих представлення. Такий підхід дозволяє чіткіше відобразити особливості взаємодії різних типів користувачів із системою залежно від платформи використання. 
+     У діаграмі прецендентів для мобільної версії представлено два типи акторів: первинні актори, розміщені зліва, – побутовий користувач, та вторинні актори, розміщені справа, – платіжна система та IoT-пристрій. 
+     Система на діаграмі представлена у вигляді прямокутника, який окреслює межі серверної частини програмної системи Ecofy. У межах системи визначено прецеденти або випадки використання (див. рис. 2.1).
+     У діаграмі використано такі типи зв’язків:
+* Association (асоціація) – відображає безпосередню взаємодію актора з відповідним прецедентом (наприклад, взаємодія побутового користувача з основними функціями системи);
+* «include» (включення) – використовується для позначення обов’язкових підпроцесів, зокрема перевірки даних користувача під час реєстрації або авторизації, а також залучення платіжної системи при оплаті преміум-функцій;
+* «extend»(розширення) – застосовується для опису альтернативних або додаткових сценаріїв, наприклад формування повідомлення про помилку у разі некоректних даних.
+     
+
+Рисунок 2.1 – UML діаграма прецедентів для серверної частини мобільного застосунку
+
+     У UML-діаграмі прецедентів для веб-версії системи представлено чотири типи акторів: первинні актори, розміщені зліва, – приватні компанії, муніципальні служби та адміністратор системи, а також вторинний актор, розміщений справа, – IoT-пристрій.
+     Система на діаграмі представлена у вигляді прямокутника, який окреслює межі серверної частини програмної системи Ecofy. У межах системи визначено прецеденти або випадки використання (див. рис. 2.2).
+     
+     
+
+     Рисунок 2.2 – UML діаграма прецедентів для серверної частини веб застосунку
+     
+     Таким чином, UML-діаграми прецедентів системи Ecofy відображають повний функціональний набір системи, структуру взаємодії між користувачами, адміністративним персоналом та IoT-пристроями, а також забезпечує розуміння логіки керування процесами збору, обліку та утилізації відходів.
+     
+     2.3 ER діаграма даних
+     
+     ER-діаграма відображає логічну структуру бази даних програмної системи Ecofy та описує основні сутності, їх атрибути й зв’язки між ними (див. рис. 2.3).
+     Центральними сутностями системи є «Користувач», «Контейнер», «Контейнерний майданчик», «Організація» та «Девайс».
+     У системі також реалізовані сутності «Заявка на прийом» та «Вивіз відходів», які забезпечують підтримку бізнес-процесів взаємодії з клієнтськими компаніями та організаціями, відповідальними за вивіз сміття. 
+     Сутність «Сповіщення» використовується для інформування користувачів та організацій про події в системі, зокрема про переповнення контейнерів або необхідність вивозу відходів. Для обліку процесу збору та утилізації сміття передбачено сутність «Сміття», яка зберігає тип відходів, вагу та дату утилізації.
+     Для адміністрування системи передбачено окрему сутність «Адмін», що відповідає за управління користувачами, організаціями та аналітичними даними.
+     
+
+Рисунок 2.3 – ER діаграма
+     Таким чином, ER-діаграма відображає повну структуру даних системи Ecofy, забезпечує цілісність інформації та підтримує реалізацію ключових функціональних можливостей системи, зокрема моніторинг контейнерів, управління користувачами, аналітику та автоматизовану взаємодію з комунальними службами.
+     
+     2.4 Розробка бази даних (БД) програмної системи
+     
+     Нормалізація – це  важливий етап розробки бази даних, який бажано виконати, бо ігнорування може призвести до надлишкових даних, аномалій при оновленні та ускладнення роботи.
+     Для ефективного процесу нормалізації об’єднуємо всі обрані сутності в одне велике універсальне відношення (див. рис. 2.4).
+     Починаємо нормалізацію з першої нормальної форми (1 НФ), яка вимагає, щоб всі значення в атрибутах були атомарними (тобто неподільними).
+
+Рисунок 2.4 – Універсальне відношення
+     Перевіряємо чи перебуває отримане універсальне відношення у 1 НФ. Під час аналізу бачимо, що всі атрибути містять лише атомарні значення, і відсутні множинні чи повторювані групи, тож вимога дотримана.
+     Далі визначаємо первинні ключі: request_id, user_id, device_id, pickup_id, admin_id (див. рис. 2.5). Ці ключі є оптимальними, оскільки вони унікально ідентифікують кожен запис у відношенні та відображають суттєві зв’язки між атрибутами. 
+     Друга нормальна форма (2 НФ), умови якої:
+* відношення має перебувати у 1 НФ;
+* усі неключові атрибути повинні повністю функціонально залежати від усього первинного ключа, а не лише від його частини.
+     
+
+Рисунок 2.5 – 2НФ
+     Наступний крок третя нормальна форма (3НФ), основна умова якої – відсутність транзитивних залежностей між неключовими атрибутами. Це означає, що всі неключові атрибути мають залежати лише від первинного ключа, а не через інший атрибут.
+     Відношення, отримані раніше, потребують приведення до 3НФ. Для цього створюємо додаткові відношення (див. рис. 2.6), оскільки існують атрибути, які залежать не від первинних ключів.
+
+Рисунок 2.6 – 3НФ
+     У процесі нормалізації даних з 1НФ до 3НФ було усунуто повторювані групи, часткові та транзитивні залежності. В результаті структура бази даних була розділена на логічно незалежні таблиці, що забезпечує цілісність даних, зменшення надмірності та спрощує подальше розширення і супровід системи.
+     
+     2.5 Діаграма структури БД
+     
+     У БД було реалізовано такі сутності, як: 
+* «Users» – зберігає інформацію про облікові записи, роль, рейтинг та історію активності, має зв'язок один до багатьох із «Notifactions»;
+* «Notifications»  –  містить повідомлення для користувачів про події;
+* «Devices» – зберігає інформацію про IoT-пристрої, підключені до контейнерів;
+* «Containers» – описує сміттєві контейнери, їх типи та поточний стан, має зв’язок один до багатьох з «Notifications», «Devices», «ContainerSite»;
+* «ContainerSite» – визначає місця розташування контейнерів, маж зв’язок один до багатьох з «Pickups»;
+* «Pickups» – фіксує події вивозу та обслуговування контейнерів;
+* «Vehicles» – містить інформацію про транспортні засоби, що використовуються для вивозу відходів, має зв’язок один до багатьох з «Pickups»;
+* «Organizations» – зберігає дані про муніципальні служби та має зв’язок один до багатьох з «Disposal_Requests»;
+* «Disposal_Requests» – зберігає заявки на вивіз або прийом відходів;
+* «Client Companies» – описує приватні компанії, має зв’язок один до багатьох з «Disposal_Requests»;
+* «Admin» – відповідає за керування системою, користувачами та налаштуваннями.
+
+Рисунок 2.7 – Схема структури бази даних «Ecofy»
+
+     Наступним етапом після проєктування структури бази даних стало її фізичне впровадження та реалізація у системі керування базами даних PostgreSQL(див. рис 2.8). На цьому етапі були створені таблиці, а також налаштовані обмеження цілісності даних
+     . 
+
+Рисунок 2.8 – Таблиці в PostgreSQL
+     Далі було виконано підключення бази даних до проєкту з метою забезпечення взаємодії між прикладною логікою та збереженими даними.
+
+     2.6 Розробка функції роботи з БД 
+     
+     У серверній частині системи реалізовано доступ до бази даних із використанням ORM (Object-Relational Mapping). ORM забезпечує відображення таблиць реляційної бази даних у вигляді об’єктів мови програмування, що дозволяє працювати з даними без написання сирих SQL-запитів.
+     Для доступу до бази даних у серверній частині системи використовується ORM-бібліотека SQLAlchemy. 
+     Підключення до PostgreSQL реалізовано через механізм створення engine та сесій (sessionmaker). Параметри підключення (адреса сервера, ім’я бази даних, користувач та пароль) зберігаються у файлі змінних середовища .env, що підвищує безпеку та спрощує розгортання системи.
+Для взаємодії з БД у FastAPI використовується залежність get_db(), яка забезпечує створення та коректне закриття сесії для кожного HTTP-запиту. Код наведено у Додатку Б.1.
+     Усі ORM-моделі наслідуються від базового класу DeclarativeBase, що дозволяє відображати таблиці бази даних у вигляді об’єктів мови Python. Додаток Б.2-Б.13.
+     
+     2.7 Розробка API для взаємодії серверної частини з клієнтами
+     
+     Для взаємодії між серверною частиною та клієнтськими застосунками в системі використовується REST API (Representational State Transfer). REST-архітектура є простою, масштабованою та широко підтримується сучасними клієнтськими платформами (веб, мобільні застосунки). API реалізовано за допомогою фреймворку FastAPI,
+Ендпоінти для роботи з користувачами (Users):
+* POST /users – ендпоінт для реєстрації нового користувача в системі. Приймає дані користувача у форматі JSON та створює новий обліковий запис;
+* GET /users/{id} – ендпоінт для отримання детальної інформації про конкретного користувача за його ідентифікатором;
+* PUT /users/{id} – ендпоінт для оновлення даних користувача;
+Ендпоінти для роботи з клієнтськими компаніями (Client Companies):
+* POST /client-companies – реєстрація нової клієнтської компанії з передачею відповідних реєстраційних даних;
+* GET /client-companies/{id} – отримання інформації про клієнтську компанію за її ідентифікатором;
+* PUT /client-companies/{id} – оновлення інформації про клієнтську компанію;
+Ендпоінти для роботи з організаціями (Organizations):
+* GET /organizations– отримання списку всіх організацій;
+* GET /organizations/{id} – отримання детальної інформації про організацію;
+* PUT /organizations/{id} – оновлення даних організації;
+Ендпоінти для роботи з контейнерами (Containers)
+* POST /containers – створення нового контейнера з прив’язкою до контейнерного майданчика;
+* GET /containers – отримання списку всіх контейнерів;
+* GET /containers/{id} – отримання інформації про контейнер за його ідентифікатором;
+* PUT /containers/{id} – оновлення параметрів контейнера;
+* DELETE /containers/{id} – видалення контейнера.
+     Ендпоінти для роботи з контейнерними майданчиками (Container Sites)
+* POST /container-sites – створення нового контейнерного майданчика із зазначенням географічних координат.
+* GET /container-sites – отримання списку контейнерних майданчиків.
+* GET /container-sites/{id} – отримання даних контейнерного майданчика.
+* PUT /container-sites/{id} – оновлення інформації про контейнерний майданчик.
+* DELETE /container-sites/{id} – видалення контейнерного майданчика.
+Ендпоінти для роботи з транспортними засобами (Vehicles):
+* POST /vehicles – додавання нового транспортного засобу до системи.
+* GET /vehicles – отримання списку транспортних засобів.
+* GET /vehicles/{id} – отримання інформації про транспортний засіб.
+* PUT /vehicles/{id} – оновлення даних транспортного засобу.
+     Посилання на код у GitHub наведено у Додатку Б.
+
+     2.8 Створити специфікацію розробленого API:
+     
+     Специфікацію API сформовано автоматично засобами FastAPI у форматі OpenAPI/Swagger та містить:
+     
+ 
+Рисунок 2.9 – Endpoints для Users
+
+
+Рисунок 2.10 – Приклад формування POST-запиту /users/register
+
+
+Рисунок 2.11 – Результат виконання POST-запиту /users/register
+
+
+Рисунок 2.12 – Приклад формування GET-запиту /users/{user_id}
+
+
+Рисунок 2.13 – Результат виконання GET-запиту /users/{user_id}
+
+
+Рисунок 2.14– Приклад формування PUT-запиту /users/{user_id}
+
+
+Рисунок 2.15– Результат виконання PUT-запиту /users/{user_id}
+
+ 
+Рисунок 2.16 – Endpoints для Client Companies
+
+
+Рисунок 2.17 – Приклад формування POST-запиту /client-company/register
+
+
+Рисунок 2.18 – Результат виконання POST-запиту /client-company/register
+
+ 
+Рисунок 2.19 – Приклад формування GET-запиту /client-companies/{client_id}
+
+
+Рисунок 2.20 – Результат виконання GET-запиту /client-companies/{client_id}
+
+
+Рисунок 2.21 – Приклад формування PUT-запиту /client-companies/{client_id}
+
+
+Рисунок 2.22 – Результат виконання PUT-запиту /client-companies/{client_id}
+
+
+ Рисунок 2.23 – Endpoints для Organizations
+
+
+Рисунок 2.24 – Результат виконання GET-запиту /organizations/
+
+
+Рисунок 2.25 – Приклад формування GET-запиту /organizations/{organization_id}
+
+
+Рисунок 2.26 – Результат виконання GET-запиту /organizations/{organization_id}
+
+
+Рисунок 2.27 – Приклад формування PUT-запиту /organizations/{organization_id}
+
+
+Рисунок 2.28 – Результат виконання PUT-запиту /organizations/{organization_id}
+
+
+Рисунок 2.29 – Endpoints для Containers
+
+
+Рисунок 2.30 – Результат виконання GET-запиту /containers/
+
+
+Рисунок 2.31 – Приклад формування POST-запиту /containers/
+
+
+Рисунок 2.32– Результат виконання POST-запиту /containers/
+
+
+Рисунок 2.33 – Приклад формування GET-запиту /containers/{container_id}
+
+
+Рисунок 2.34 – Результат виконання GET-запиту /containers/{container_id}
+
+
+Рисунок 2.35 – Приклад формування PUT-запиту /containers/{comtainer_id}
+
+
+
+Рисунок 2.36 – Результат виконання PUT-запиту /containers/{container_id}
+
+
+Рисунок 2.37 – Приклад формування DELETE-запиту /containers/{container_id}
+
+
+Рисунок 2.38 – Результат виконання DELETE-запиту /containers/{container_id}
+
+
+Рисунок 2.39 – Endpoints для Container Sites
+
+
+Рисунок 2.40 – Результат виконання GET-запиту /container-sites/
+
+
+Рисунок 2.41 – Приклад формування POST-запиту /container-sites/
+
+
+Рисунок 2.42 – Результат виконання POST-запиту /container-sites/
+
+
+Рисунок 2.43 – Приклад формування GET-запиту /container-sites/{container-site_id}
+
+
+Рисунок 2.44 – Результат виконання GET-запиту /container-sites/{container-site-id}
+
+
+Рисунок 2.45 – Приклад формування PUT-запиту /container-sites/
+
+
+Рисунок 2.46 – Результат виконання PUT-запиту /container-sites/
+
+
+Рисунок 2.47 – Приклад формування DELETE-запиту /container-sites/
+
+
+Рисунок 2.48 – Результат виконання DELETE-запиту /container-sites/
+
+
+Рисунок 2.49 – Endpoints для Vehicles
+
+
+Рисунок 2.50 – Результат виконання GET-запиту /vehicles/
+
+
+Рисунок 2.51 – Приклад формування POST-запиту /vehicles /
+
+
+Рисунок 2.52 – Результат виконання POST-запиту /vehicles /
+
+
+Рисунок 2.53 – Приклад формування GET-запиту /vehicles/{vehicle_id}
+
+
+Рисунок 2.54 – Результат виконання GET-запиту /vehicles/{vehicle_id}
+
+
+Рисунок 2.55 – Приклад формування PUT-запиту /vehicles/{vehicle_id}
+
+
+Рисунок 2.56 – Результат виконання PUT-запиту /vehicles/{vehicle_id}
+
+
+Рисунок 2.57 – Приклад формування DELETE-запиту /vehicles/{vehicle_id}
+
+
+Рисунок 2.58 – Результат виконання DELETE-запиту /vehicles/{vehicle_id}
+
+     Отже, специфікація розробленого API охоплює повний набір кінцевих точок для роботи з основними сутностями системи Ecofy, включаючи користувачів, організації, контейнери, контейнерні майданчики, транспортні засоби та клієнтські компанії. Для кожного ресурсу реалізовано операції створення, отримання, оновлення та видалення даних, що забезпечує зручну взаємодію клієнтських застосунків із серверною частиною системи.
+     
+     2.9 Перевірка коректності роботи API та його взаємодію з БД.
+     
+     Перевірка роботи серверної частини програмної системи Ecofy здійснювалася шляхом запуску REST API, реалізованого з використанням фреймворку FastAPI, та виконання тестових HTTP-запитів до реалізованих ендпоінтів.
+     Для тестування використовувалася автоматично згенерована документація Swagger (OpenAPI), доступна за адресою /docs, яка дозволяє перевіряти коректність роботи ендпоінтів, передавати параметри запитів та аналізувати відповіді сервера.
+     У процесі перевірки було протестовано CRUD-операції (Create, Read, Update, Delete) для основних сутностей системи, зокрема користувачів, контейнерів, контейнерних майданчиків, транспортних засобів та заявок на вивіз відходів. Було підтверджено коректність збереження та отримання даних з бази даних PostgreSQL (див. рис. 2.59 -2.64).
+     
+
+Рисунок 2.59 – Перевірка роботи Users
+     
+
+     Рисунок 2.60 – Перевірка роботи Client Companies
+     
+
+     Рисунок 2.61 – Перевірка роботи Organization
+     
+
+     Рисунок 2.62 – Перевірка роботи Containers
+
+
+     Рисунок 2.63 – Перевірка роботи Container Sites
+     
+     
+     Рисунок 2.64 – Перевірка роботи Vehicles
+     
+     Результати тестування підтвердили правильність роботи серверної частини системи та відповідність реалізованої логіки поставленим вимогам.
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+
+ВИСНОВКИ
+     
+     У процесі виконання роботи було розроблено серверну частину програмної системи Ecofy, призначеної для автоматизації процесів збору, обліку та утилізації побутових відходів. Серверна частина реалізована з використанням фреймворку FastAPI відповідно до принципів RESTful API, що забезпечує стандартизований і безпечний доступ клієнтських застосунків до ресурсів системи.
+     У ході проєктування були створені UML-діаграми прецедентів та ER-діаграма, які дозволили формалізувати функціональні можливості системи, структуру даних і взаємодію між користувачами, адміністраторами, організаціями та IoT-пристроями. База даних спроєктована за реляційною моделлю, нормалізована до третьої нормальної форми та реалізована в PostgreSQL.
+     Для роботи з базою даних використано ORM-бібліотеку SQLAlchemy, а взаємодія із клієнтами реалізована через набір API-ендпоінтів для основних сутностей системи. Специфікацію API автоматично сформовано у форматі OpenAPI/Swagger, що дозволило виконати тестування ендпоінтів і підтвердити коректність їх роботи та взаємодії з базою даних.
+     Отримані результати підтверджують, що розроблена серверна частина системи Ecofy відповідає поставленим вимогам, є масштабованою та придатною для подальшого розвитку.
+     
+     
+     
+     
+     
+     
+
+ДОДАТОК А
+Відеозапис
+     
+     Відеозапис лабораторної: https://youtu.be/H_gTPA0bc4I
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+
+ДОДАТОК Б
+Програмний код
+
+     GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+     Б.1 Модуль ініціалізації бази даних і забезпечення доступу до неї в FastAPI
+     
+1 import os
+2 from sqlalchemy import create_engine
+3 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+4 from dotenv import load_dotenv
+
+5 load_dotenv()
+
+6 DATABASE_URL = (
+7 f"postgresql+psycopg2://{os.getenv('DB_USER')}:"
+8 f"{os.getenv('DB_PASSWORD')}@"
+9 f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/"
+10 f"{os.getenv('DB_NAME')}?sslmode=require"
+11 )
+
+12 engine = create_engine(DATABASE_URL, echo=False)
+
+13 SessionLocal = sessionmaker(
+14 autocommit=False,
+15 autoflush=False,
+16 bind=engine
+17 )
+
+18 class Base(DeclarativeBase):
+19 pass
+
+20 def get_db():
+21 db = SessionLocal()
+22 try:
+yield db
+23 finally:
+db.close()
+     
+     
+
+
+
+
+     GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+     Б.2 ORM-модель таблиці адміністраторів системи
+     
+1 from sqlalchemy import Column, Integer, String
+2 from src.database import Base
+
+3 class Admins(Base):
+4 __tablename__ = "admins"
+
+5 admin_id = Column(Integer, primary_key=True, index=True)
+6 last_name = Column(String(100), nullable=False)
+7 first_name = Column(String(100), nullable=False)
+8 patronymic = Column(String(100))
+9 password_hash = Column(String(255), nullable=False)
+10 email = Column(String(150), nullable=False)
+
+     GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+Б.3 ORM-модель клієнтських компаній, що подають заявки на утилізацію
+
+1 from sqlalchemy import Column, Integer, String
+2 from sqlalchemy.orm import relationship
+3 from src.database import Base
+
+4 class ClientCompanies(Base):
+5 __tablename__ = "clientcompanies"
+
+6 client_id = Column(Integer, primary_key=True, index=True)
+7 name = Column(String(200), nullable=False)
+8 type = Column(String(100))
+9 city = Column(String(100))
+10 street = Column(String(100))
+11 building = Column(String(20))
+12 phone_number = Column(String(20))
+13 email = Column(String(150), nullable=False)
+14 password_hash = Column(String(255), nullable=False)
+15 edrpou = Column(String(20))
+
+16 disposal_requests = relationship(
+"DisposalRequests", back_populates="client")
+
+     GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+Б.4 ORM-модель майданчиків розміщення контейнерів
+
+1 from sqlalchemy import Column, Integer, Float, ForeignKey, String, Text
+2 from sqlalchemy.orm import relationship
+3 from src.database import Base
+
+4 class ContainerSite(Base):
+5 __tablename__ = "containersite"
+
+6 container_site_id = Column(Integer, primary_key=True, index=True)
+7 location_lat = Column(String(100), nullable=False)
+8 location_lng = Column(String(100), nullable=False)
+9 city = Column(String(100))
+10 street = Column(String(100))
+11 building = Column(String(20))
+12 entrance = Column(String(10))
+13 description = Column(Text)
+
+14 organization_id = Column(Integer, ForeignKey(
+15 "organization.organization_id", ondelete="CASCADE"))
+
+16 organization = relationship(
+17 "Organization", back_populates="container_sites")
+18 containers = relationship("Containers", back_populates="site")
+19 pickups = relationship("Pickups", back_populates="site")
+
+GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+Б.5 ORM-модель контейнерів для збирання відходів
+
+1 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+2 from sqlalchemy.orm import relationship
+3 from datetime import datetime
+4 from src.database import Base
+
+5 class Containers(Base):
+6 __tablename__ = "containers"
+
+7 container_id = Column(Integer, primary_key=True, index=True)
+8 type = Column(String(50), nullable=False)
+9 capacity = Column(Integer)
+10 fill_level = Column(Integer)
+11 status = Column(String(50), nullable=False)
+12 tilted = Column(Boolean, default=False)
+13 last_update = Column(DateTime, default=datetime.utcnow)
+
+14 container_site_id = Column(
+15 Integer,
+16 ForeignKey("containersite.container_site_id", ondelete="CASCADE")
+17 )
+
+18 site = relationship("ContainerSite", back_populates="containers")
+19 devices = relationship("Devices", back_populates="container")
+20 notifications = relationship("Notifications", back_populates="container")
+
+GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+Б.6 ORM-модель IoT-пристроїв, підключених до контейнерів
+
+1 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+2 from sqlalchemy.orm import relationship
+3 from datetime import datetime
+4 from src.database import Base
+
+5 class Devices(Base):
+6 __tablename__ = "devices"
+
+7 device_id = Column(Integer, primary_key=True, index=True)
+8 device_name = Column(String(100), nullable=False)
+9 serial_number = Column(String(100), nullable=False)
+10 device_type = Column(String(50))
+11 last_signal = Column(DateTime, default=datetime.utcnow)
+12 battery_level = Column(Integer)
+13 status = Column(String(50))
+
+14 container_id = Column(Integer, ForeignKey(
+15 "containers.container_id", ondelete="SET NULL"))
+
+16 container = relationship("Containers", back_populates="devices")
+
+GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+Б.7 ORM-модель заявок на утилізацію відходів
+
+1 from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey
+2 from sqlalchemy.orm import relationship
+3 from datetime import datetime
+4 from src.database import Base
+
+5 class DisposalRequests(Base):
+6 __tablename__ = "disposal_requests"
+
+7 request_id = Column(Integer, primary_key=True, index=True)
+8 waste_type = Column(String(100), nullable=False)
+9 waste_description = Column(Text)
+10 amount_kg = Column(Float)
+11 created_at = Column(DateTime, default=datetime.utcnow)
+12 updated_at = Column(DateTime)
+13 status = Column(String(50))
+
+14 organization_id = Column(Integer, ForeignKey(
+15 "organization.organization_id", ondelete="CASCADE"))
+16 client_id = Column(Integer, ForeignKey(
+17 "clientcompanies.client_id", ondelete="CASCADE"))
+
+18 organization = relationship(
+19 "Organization", back_populates="disposal_requests")
+20 client = relationship(
+21 "ClientCompanies", back_populates="disposal_requests")
+
+GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+Б.8 ORM-модель системних сповіщень
+
+1 from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
+2 from sqlalchemy.orm import relationship
+3 from datetime import datetime
+4 from src.database import Base
+
+5 class Notifications(Base):
+6 __tablename__ = "notifications"
+
+7 notification_id = Column(Integer, primary_key=True, index=True)
+8 message = Column(Text, nullable=False)
+9 message_type = Column(String(50), nullable=False)
+10 created_at = Column(DateTime, default=datetime.utcnow)
+
+11 user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"))
+12 container_id = Column(Integer, ForeignKey(
+13 "containers.container_id", ondelete="SET NULL"))
+
+14 user = relationship("Users", back_populates="notifications")
+15 container = relationship("Containers", back_populates="notifications")
+
+GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+Б.9 ORM-модель організацій, що обслуговують контейнери
+
+1 from sqlalchemy import Column, Integer, String
+2 from sqlalchemy.orm import relationship
+3 from src.database import Base
+
+4 class Organization(Base):
+5 __tablename__ = "organization"
+
+6 organization_id = Column(Integer, primary_key=True, index=True)
+7 name = Column(String(150), nullable=False)
+8 type = Column(String(50))
+9 city = Column(String(100))
+10 street = Column(String(100))
+11 building = Column(String(20))
+12 phone_number = Column(String(20))
+13 email = Column(String(150), nullable=False)
+14 password_hash = Column(String(255), nullable=False)
+15 edrpou = Column(String(20))
+
+16 container_sites = relationship(
+17 "ContainerSite", back_populates="organization")
+18 disposal_requests = relationship(
+19 "DisposalRequests", back_populates="organization")
+
+
+GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+Б.10 ORM-модель запланованих та виконаних вивозів відходів
+
+1 from sqlalchemy import Column, Integer, DateTime, ForeignKey
+2 from sqlalchemy.orm import relationship
+3 from src.database import Base
+
+4 class Pickups(Base):
+5 __tablename__ = "pickups"
+
+6 pickup_id = Column(Integer, primary_key=True, index=True)
+7 scheduled_time = Column(DateTime)
+8 completed_time = Column(DateTime)
+
+9 container_site_id = Column(Integer, ForeignKey(
+10 "containersite.container_site_id", ondelete="CASCADE"))
+11 vehicle_id = Column(Integer, ForeignKey(
+12 "vehicles.vehicle_id", ondelete="SET NULL"))
+
+13 site = relationship("ContainerSite", back_populates="pickups")
+14 vehicle = relationship("Vehicles", back_populates="pickups")
+GitHub репозиторій: https://github.com/NureButAnna/ark-pzpi-23-8-but-anna/tree/main/Task2/ark-pzpi-23-8-but-anna-task2
+Б.11 ORM-модель побутових користувачів системи
+
+1 from sqlalchemy import Column, Integer, String
+2 from sqlalchemy.orm import relationship
+3 from src.database import Base
+
+4 class Users(Base):
+5 __tablename__ = "users"
+
+6 user_id = Column(Integer, primary_key=True, index=True)
+7 last_name = Column(String(100), nullable=False)
+8 first_name = Column(String(100), nullable=False)
+9 patronymic = Column(String(100))
+10 password_hash = Column(String(255), nullable=False)
+11 phone_number = Column(String(20))
+12 email = Column(String(150), nullable=False)
+13 city = Column(String(100))
+
+14 notifications = relationship("Notifications", back_populates="user”)
